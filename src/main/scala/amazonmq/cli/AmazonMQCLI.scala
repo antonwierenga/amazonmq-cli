@@ -40,6 +40,7 @@ object AmazonMQCLI extends App {
     "v0.0.0" → List(
       "New shell command 'add-queue'",
       "New shell command 'add-topic'",
+      "New shell command 'browse-messages'",
       "New shell command 'connect'",
       "New shell command 'copy-messages '",
       "New shell command 'disconnect'",
