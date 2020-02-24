@@ -1,65 +1,47 @@
-# activemq-cli
-Command-line tool (Windows/macOS/Linux) to interact with a JMX enabled Apache ActiveMQ message broker.
+# amazonmq-cli
+Command-line tool (Windows/macOS/Linux) to interact with the Amazon MQ message broker.
 
-[![alt text](/activemq_demo.gif)](https://www.youtube.com/watch?v=e_D6qGl-ZC8 "YouTube demo video")
-Here is a [three minute video](https://www.youtube.com/watch?v=e_D6qGl-ZC8) that shows how to install, configure and use ActiveMQ CLI. 
+amazonmq-cli requires access to the [ActiveMQ Web Console](https://activemq.apache.org/web-console) of the Amazon MQ message broker.
+
+![screenshot](/amazonmq_screenshot.jpg)
 
 ## Installation
-Download activemq-cli in the [release section](https://github.com/antonwierenga/activemq-cli/releases) of this repository.
+Download amazonmq-cli in the [release section](https://github.com/antonwierenga/amazonmq-cli/releases) of this repository.
 
-Unzip the activemq-cli-x.x.x.zip file and configure the broker you want to connect to in `activemq-cli-x.x.x/conf/activemq-cli.config`:
+Unzip the amazonmq-cli-x.x.x.zip file and configure the broker you want to connect to in `amazonmq-cli-x.x.x/conf/amazonmq-cli.config`:
 
 ```scala
 broker {
-  local {
-    amqurl = "tcp://localhost:61616"
-    jmxurl = "service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi"
-    username = ""
+  my-aws-broker {
+    web-console = "https://your-amazon-mq-broker-host:8162/admin/"
+    amqurl = "ssl://your-amazon-mq-broker-host:61617"
+    username = "admin"
     password = ""
-    prompt-color = "light-blue" 
+    prompt-color = "light-blue" // Possible values: "gray", "red", "light-red", "light-green", "green", "light-yellow", "yellow", "light-blue", "blue", "light-purple", "purple", "light-cyan", "cyan", "light-white", "white"
   }
 
   // add additional brokers here
-  dev {
-    amqurl = "tcp://development-server:61616"
-    jmxurl = "service:jmx:rmi:///jndi/rmi://development-server:1099/jmxrmi"
+  test {
+    web-console = "https://your-amazon-mq-test-broker-host:8162/admin/"
+    amqurl = "ssl://your-amazon-mq-test-broker-host:61617"
     username = "admin"
-    password = "admin"		
-  }	
-  
-  prod {
-    amqurl = "tcp://production-server:61616"
-    jmxurl = "service:jmx:rmi:///jndi/rmi://production-server:1099/jmxrmi"
-  }	
-  
-  fuse-server {
-    amqurl = "tcp://fuse-server:61616"
-    jmxurl = "service:jmx:rmi:///jndi/rmi://fuse-server:1099/karaf-root"  
-  }
-  
-  ssl-server {
-    amqurl = "ssl://ssl-server:61616"
-    jmxurl = "service:jmx:rmi:///jndi/rmi://ssl-server:1099/jmxrmi"
-    
-    // SSL 
-    keyStore = "~/client.ks"
-    keyStorePassword = "secret"
-    trustStore = "~/client.ts"
-  }  
+    password = "secret"
+    prompt-color = "light-blue" // Possible values: "gray", "red", "light-red", "light-green", "green", "light-yellow", "yellow", "light-blue", "blue", "light-purple", "purple", "light-cyan", "cyan", "light-white", "white"
+  } 
 }
 ```
 
 ## Usage
-To enter the activemq-cli shell run `activemq-cli-x.x.x/bin/activemq-cli` or `activemq-cli-x.x.x/bin/activemq-cli.bat` if you are using Windows.
+To enter the amazonmq-cli shell run `amazonmq-cli-x.x.x/bin/amazonmq-cli` or `amazonmq-cli-x.x.x/bin/amazonmq-cli.bat` if you are using Windows.
 
-activemq-cli provides tab completion to speed up typing commands, to see which commands are available and what parameters are supported.
+amazonmq-cli provides tab completion to speed up typing commands, to see which commands are available and what parameters are supported.
 
-*In addition to executing commands in the shell, activemq-cli also supports executing a file containing commands:*
-`activemq-cli --cmdfile my_commands.txt`
+*In addition to executing commands in the shell, amazonmq-cli also supports executing a file containing commands:*
+`amazonmq-cli --cmdfile my_commands.txt`
 
-To connect to a broker that is configured in `activemq-cli-x.x.x/conf/activemq-cli.config`: `connect --broker dev`
+To connect to a broker that is configured in `amazonmq-cli-x.x.x/conf/amazonmq-cli.config`: `connect --broker dev`
 
-Below is a list of commands that activemq-cli supports.
+Below is a list of commands that amazonmq-cli supports.
 
 ### add-queue
 Adds a queue.
@@ -78,12 +60,12 @@ Adds a topic.
 Example:`add-topic --name foo`
 
 ### connect
-Connects activemq-cli to a broker.
+Connects amazonmq-cli to a broker.
 
 ##### Parameters:
-  - broker (broker must be defined in `activemq-cli-x.x.x/conf/activemq-cli.config`)
+  - broker (broker must be defined in `amazonmq-cli-x.x.x/conf/amazonmq-cli.config`)
 
-Example:`connect --broker local`
+Example:`connect --broker my-aws-broker`
 
 ### copy-messages
 Copies messages from a queue to another queue.
@@ -95,20 +77,12 @@ Copies messages from a queue to another queue.
 
 Example:`copy-messages --from foo --to bar`
 
+*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
+
 ### disconnect
-Disconnects activemq-cli from the broker.
+Disconnects amazonmq-cli from the broker.
 
 Example:`disconnect`
-
-### export-broker
-Exports queues, topics and messages to file.
-
-##### Parameters:
-  - file
-
-Example:`export-broker --file broker.xml`
-
-*For this command activemq-cli creates temporary mirror queues to ensure all messages are exported.*
 
 ### export-messages
 Exports messages to file.
@@ -121,7 +95,7 @@ Exports messages to file.
  
 Example:`export-messages --queue foo`
 
-*For this command activemq-cli creates a temporary mirror queue to ensure all messages are exported.*
+*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
 
 ### info
 Displays information (e.g. version, uptime, total number of queues/topics/messages) about the broker 
@@ -142,7 +116,7 @@ Example 2:`list-messages --queue foo --selector "JMSCorrelationID = '12345'"`
 
 Example 3:`list-messages --queue foo --regex bar`
 
-*For this command activemq-cli creates a temporary mirror queue to ensure all messages are listed.*
+*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
 
 ### list-queues
 Lists queues.
@@ -178,14 +152,7 @@ Moves messages from a queue to another queue.
   - to 
   - selector (move messages that match the (JMS) selector)
 
-### pause-queue
-Pauses a queues.
-
-##### Parameters:
-  - name 
-  - force (no prompt for confirmation)
-
-Example:`pause-queue --name foo`
+*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
 
 ### purge-all-queues
 Purges all queues.
@@ -265,15 +232,6 @@ Removes a topic.
 
 Example:`remove-topic --name foo`
 
-### resume-queue
-Resumes a queues.
-
-##### Parameters:
-  - name 
-  - force (no prompt for confirmation)
-
-Example:`resume-queue --name foo`
-
 ### send-message
 Sends a message or file of messages to a queue or topic.
 
@@ -331,19 +289,3 @@ Example 1:`send-message --body foo --queue bar`
 
 Example 2:`send-message --file foo.xml --topic bar`
 
-### start-embedded-broker
-Starts the embedded broker.
-
-The embedded broker is configured in `activemq-cli-x.x.x/conf/activemq-cli.config`:
-```scala
-embedded-broker {
-	connector = "tcp://localhost:61616"
-	jmxport = 1099	
-}
-```
-Example:`start-embedded-broker`
-
-### stop-embedded-broker
-Stops the embedded broker.
-
-Example:`stop-embedded-broker`
