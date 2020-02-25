@@ -59,6 +59,20 @@ Adds a topic.
 
 Example:`add-topic --name foo`
 
+### browse-messages
+Browse messages. The browse operation may not return all messages due to limitations of broker configuration and system resources. In contrast to list-messages the browse-messages command also takes in-flight messages into consideration.
+
+##### Parameters:
+  - queue
+  - selector (browse messages that match the (JMS) selector)
+  - regex (browse messages whose body match the regex)
+
+Example 1:`browse-messages --queue foo`
+
+Example 2:`browse-messages --queue foo --selector "JMSCorrelationID = '12345'"`
+
+Example 3:`browse-messages --queue foo --regex bar`
+
 ### connect
 Connects amazonmq-cli to a broker.
 
@@ -74,7 +88,8 @@ Copies messages from a queue to another queue.
   - from
   - to 
   - selector (copy messages that match the (JMS) selector)
-
+  - regex (copy messages whose body match the regex)
+  
 Example:`copy-messages --from foo --to bar`
 
 *For this command amazonmq-cli consumes all messages from the --from queue and sends the messages back to the --from and --to queues. In flight messages are not in scope of this command.*
@@ -151,7 +166,8 @@ Moves messages from a queue to another queue.
   - from
   - to 
   - selector (move messages that match the (JMS) selector)
-
+  - regex (move messages whose body match the regex)
+  
 *For this command amazonmq-cli consumes all messages from the --from queue and sends the messages to the --to queue. In flight messages are not in scope of this command.*
 
 ### purge-all-queues
