@@ -77,7 +77,7 @@ Copies messages from a queue to another queue.
 
 Example:`copy-messages --from foo --to bar`
 
-*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
+*For this command amazonmq-cli consumes all messages from the --from queue and sends the messages back to the --from and --to queues. In flight messages are not in scope of this command.*
 
 ### disconnect
 Disconnects amazonmq-cli from the broker.
@@ -95,7 +95,7 @@ Exports messages to file.
  
 Example:`export-messages --queue foo`
 
-*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
+*For this command amazonmq-cli consumes all messages from the --from queue and sends the messages back to the --from queue. In flight messages are not in scope of this command.*
 
 ### info
 Displays information (e.g. version, uptime, total number of queues/topics/messages) about the broker 
@@ -116,7 +116,7 @@ Example 2:`list-messages --queue foo --selector "JMSCorrelationID = '12345'"`
 
 Example 3:`list-messages --queue foo --regex bar`
 
-*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
+*For this command amazonmq-cli consumes all messages from the --from queue and sends the messages back to the --from queue. In flight messages are not in scope of this command.*
 
 ### list-queues
 Lists queues.
@@ -152,7 +152,7 @@ Moves messages from a queue to another queue.
   - to 
   - selector (move messages that match the (JMS) selector)
 
-*For this command amazonmq-cli consumes all messages and returns them to their original queue. In flight messages are not in scope of this command.*
+*For this command amazonmq-cli consumes all messages from the --from queue and sends the messages to the --to queue. In flight messages are not in scope of this command.*
 
 ### purge-all-queues
 Purges all queues.
