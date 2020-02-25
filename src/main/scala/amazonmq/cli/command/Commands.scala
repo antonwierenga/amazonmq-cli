@@ -149,18 +149,28 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
       validateQueueExists(webClient, queue)
       withSession((session: Session) ⇒ {
         var callbacks = 0
-        val destination = session.createQueue(queue);
         val consumer = session.createConsumer(session.createQueue(queue), selector.getOrElse(null)) //scalastyle:ignore
-        val producers = ListBuffer(session.createProducer(session.createQueue(firstDestinationQueue)))
-        val secondProducer = if (secondDestinationQueue.isDefined) {
-          producers.add(session.createProducer(session.createQueue(secondDestinationQueue.get)))
+        val queueDestinationProducer = session.createProducer(session.createQueue(queue))
+        val firstDestinationProducer = session.createProducer(session.createQueue(firstDestinationQueue))
+        val secondDestinationProducer = if (secondDestinationQueue.isDefined) {
+          Some(session.createProducer(session.createQueue(secondDestinationQueue.get)))
+        } else {
+          None
         }
         var message = consumer.receive(receiveTimeout)
         while (Option(message).isDefined) {
-          producers.map(producer ⇒ producer.send(message))
-          callback(message)
-          callbacks = callbacks + 1
+          if (message.textMatches(regex.getOrElse(null))) { //scalastyle:ignore
+            firstDestinationProducer.send(message)
+            if (secondDestinationProducer.isDefined) {
+              secondDestinationProducer.get.send(message)
+            }
+            callback(message)
+            callbacks = callbacks + 1
+          } else {
+            queueDestinationProducer.send(message) // put back on original queue
+          }
           message = consumer.receive(receiveTimeout)
+
         }
         info(s"\n$responseMessage: $callbacks")
       })

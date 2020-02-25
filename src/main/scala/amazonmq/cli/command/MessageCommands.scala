@@ -50,9 +50,10 @@ class MessageCommands extends Commands {
   def moveMessages(
     @CliOption(key = Array("from"), mandatory = true, help = "The source queue") from: String,
     @CliOption(key = Array("to"), mandatory = true, help = "The target queue") to: String,
-    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String
+    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String,
+    @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String
   ): String = {
-    withEveryMessage(from, Option(selector), None, "Messages moved", to, None,
+    withEveryMessage(from, Option(selector), Option(regex), "Messages moved", to, None,
       AmazonMQCLI.Config.getLong("command.move-messages.receive-timeout"),
       (message: Message) ⇒ {})
   }
@@ -61,9 +62,10 @@ class MessageCommands extends Commands {
   def copyMessages(
     @CliOption(key = Array("from"), mandatory = true, help = "The source queue") from: String,
     @CliOption(key = Array("to"), mandatory = true, help = "The target queue") to: String,
-    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String
+    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String,
+    @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String
   ): String = {
-    withEveryMessage(from, Option(selector), None, "Messages copied", to, Some(from),
+    withEveryMessage(from, Option(selector), Option(regex), "Messages copied", to, Some(from),
       AmazonMQCLI.Config.getLong("command.copy-messages.receive-timeout"),
       (message: Message) ⇒ {})
   }
@@ -225,11 +227,13 @@ class MessageCommands extends Commands {
       var numberOfMessages = 0
       val enumeration = session.createBrowser(session.createQueue(queue), selector).getEnumeration
       while (enumeration.hasMoreElements) {
-        println(info(s"${enumeration.nextElement.asInstanceOf[TextMessage].toXML(AmazonMQCLI.Config.getOptionalString("command.list-messages.timestamp-format"))}")) //scalastyle:ignore
-        numberOfMessages = numberOfMessages + 1
+        val message = enumeration.nextElement.asInstanceOf[TextMessage]
+        if (message.textMatches(regex)) {
+          println(info(s"${message.toXML(AmazonMQCLI.Config.getOptionalString("command.list-messages.timestamp-format"))}")) //scalastyle:ignore
+          numberOfMessages = numberOfMessages + 1
+        }
       }
-      println(info(s"\nMessages browsed: $numberOfMessages")) //scalastyle:ignore
-      warn("The browse-messages command may not return all messages due to limitations of broker configuration and system resources.")
+      info(s"\nMessages browsed: $numberOfMessages (not all messages may be returned due to limitations of broker configuration and system resources)") //scalastyle:ignore
     })
   })
 }

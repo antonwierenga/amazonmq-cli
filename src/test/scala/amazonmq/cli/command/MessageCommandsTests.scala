@@ -120,10 +120,52 @@ class MessageCommandsTests {
   @Test
   def testBrowseMessages = {
     assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertEquals(
-      warn("The browse-messages command may not return all messages due to limitations of broker configuration and system resources."),
-      shell.executeCommand("browse-messages --queue testQueue").getResult
-    )
+    assertEquals(info("\nMessages browsed: 1 (not all messages may be returned due to limitations of broker configuration and system resources)"), shell.executeCommand("browse-messages --queue testQueue").getResult)
+  }
+
+  @Test
+  def testListMessagesRegex = {
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue testQueue --regex testMessage2").getResult)
+    assertEquals(info("\nMessages listed: 2"), shell.executeCommand("list-messages --queue testQueue").getResult)
+  }
+
+  @Test
+  def testMoveMessagesRegex = {
+    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
+    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
+    assertEquals(info("\nMessages moved: 1"), shell.executeCommand("move-messages --from fromQueue --regex testMessage1 --to toQueue").getResult)
+    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue fromQueue --regex testMessage2").getResult)
+    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue toQueue --regex testMessage1").getResult)
+  }
+
+  @Test
+  def testCopyMessagesRegex = {
+    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
+    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
+    assertEquals(info("\nMessages copied: 1"), shell.executeCommand("copy-messages --from fromQueue --regex testMessage1 --to toQueue").getResult)
+    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue fromQueue --regex testMessage1").getResult)
+    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue fromQueue --regex testMessage2").getResult)
+    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue toQueue --regex testMessage1").getResult)
+  }
+
+  @Test
+  def testExportMessagesRegex = {
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+
+    val messageFilePath = createTempFilePath("MessageCommandsTests_testSendAndExportMessage")
+    try {
+      assertEquals(info(s"\nMessages exported to ${new File(messageFilePath).getCanonicalPath()}: 1"), shell.executeCommand(s"export-messages --queue testQueue --regex testMessage1 --file $messageFilePath").getResult)
+    } finally new File(messageFilePath).delete
+  }
+
+  @Test
+  def testBrowseMessagesRegex = {
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+    assertEquals(info("\nMessages browsed: 1 (not all messages may be returned due to limitations of broker configuration and system resources)"), shell.executeCommand("browse-messages --queue testQueue --regex testMessage1").getResult)
   }
 }
 

@@ -37,6 +37,12 @@ class AmazonMQCLI extends CommandMarker {
 object AmazonMQCLI extends App {
 
   lazy val ReleaseNotes = Map(
+    "v0.1.0" → List(
+      "Updated shell command 'browse-messages': new option --regex",
+      "Updated shell command 'copy-messages': new option --regex",
+      "Updated shell command 'move-messages': new option --regex",
+      "Implemented --regex option for shell command list-messages and export-messages"
+    ),
     "v0.0.0" → List(
       "New shell command 'add-queue'",
       "New shell command 'add-topic'",

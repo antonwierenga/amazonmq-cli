@@ -2,7 +2,7 @@ organization := "com.antonwierenga"
 
 name := "amazonmq-cli"
 
-version := "0.0.0"
+version := "0.1.0"
 
 scalaVersion := "2.11.6"
 
