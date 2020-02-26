@@ -66,7 +66,7 @@ class MessageCommandsTests {
 
   @Test
   def testSendAndExportInlineMessageAllHeadersProvided = {
-    assertTrue(shell.executeCommand("send-message --queue testQueue --reply-to replyQueue --correlation-id testCorrelationId --delivery-mode NON_PERSISTENT --time-to-live 2000 --priority 1 --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
+    assertTrue(shell.executeCommand("send-message --queue testQueue --reply-to replyQueue --correlation-id testCorrelationId --delivery-mode NON_PERSISTENT --time-to-live 20000 --priority 1 --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
     assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue testQueue").getResult)
 
     val messageFilePath = createTempFilePath("MessageCommandsTests_testSendAndExportMessage")
@@ -101,7 +101,7 @@ class MessageCommandsTests {
   def testSendInlineMessageToTopic = {
     assertEquals(info("Topic 'VirtualTopic.testTopic' added"), shell.executeCommand("add-topic --name VirtualTopic.testTopic").getResult)
     assertEquals(info("Queue 'Consumer.testQueue.VirtualTopic.testTopic' added"), shell.executeCommand("add-queue --name Consumer.testQueue.VirtualTopic.testTopic").getResult)
-    assertEquals(info("Messages sent to topic 'VirtualTopic.testTopic': 1"), shell.executeCommand("send-message --topic VirtualTopic.testTopic --body testMessage").getResult)
+    assertTrue(shell.executeCommand("send-message --topic VirtualTopic.testTopic --body testMessage").getResult.toString.contains("Messages sent to topic 'VirtualTopic.testTopic': 1"))
     assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue Consumer.testQueue.VirtualTopic.testTopic").getResult)
   }
 

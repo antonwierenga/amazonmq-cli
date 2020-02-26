@@ -23,7 +23,7 @@ import amazonmq.cli.AmazonMQCLI
 import amazonmq.cli.util.Console.{info, prompt, warn}
 import amazonmq.cli.util.Implicits._
 import amazonmq.cli.util.PrintStackTraceExecutionProcessor
-import com.gargoylesoftware.htmlunit.WebClient
+import com.gargoylesoftware.htmlunit.{BrowserVersion, WebClient}
 import com.gargoylesoftware.htmlunit.xml.XmlPage
 import javax.jms.{Connection, Message, Session}
 import javax.xml.bind.DatatypeConverter._
@@ -129,7 +129,7 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
   }
 
   def withWebClient(callback: (WebClient) ⇒ String): String = {
-    val webClient = new WebClient();
+    val webClient = new WebClient(BrowserVersion.BEST_SUPPORTED);
     webClient.addRequestHeader("Authorization", "Basic " + printBase64Binary(s"${AmazonMQCLI.broker.get.username}:${AmazonMQCLI.broker.get.password}".getBytes))
     webClient.getOptions.setJavaScriptEnabled(false)
     try {

@@ -88,8 +88,8 @@ class BrokerCommands extends Commands {
     withWebClient((webClient: WebClient) ⇒ {
       val page: HtmlPage = webClient.getPage(AmazonMQCLI.broker.get.webConsole)
       val tableRows = page.getByXPath("//td//table//tr").toArray.toList.asInstanceOf[List[HtmlTableRow]]
-      val headers = tableRows.map(tableRow ⇒ tableRow.getCell(0).getVisibleText)
-      val row = tableRows.map(tableRow ⇒ tableRow.getCell(1).getVisibleText)
+      val headers = tableRows.map(tableRow ⇒ tableRow.getCell(0).getTextContent)
+      val row = tableRows.map(tableRow ⇒ tableRow.getCell(1).getTextContent)
       renderTable(List(row), headers)
     })
   }

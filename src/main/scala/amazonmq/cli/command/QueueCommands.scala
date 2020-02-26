@@ -64,6 +64,7 @@ class QueueCommands extends Commands {
       val page: HtmlPage = webClient.getPage(s"${AmazonMQCLI.broker.get.webConsole}/queues.jsp")
       val anchor = page.getAnchors().find(a ⇒ a.getHrefAttribute.startsWith("purgeDestination.action") &&
         a.getHrefAttribute.contains(s"JMSDestination=$name&JMSDestinationType=queue"))
+
       try {
         anchor.get.click()
       } catch {

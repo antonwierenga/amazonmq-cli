@@ -163,7 +163,7 @@ class QueueCommandsTests {
 
   @Test
   def testListQueuesFilters = {
-    assertEquals(info("Messages sent to queue 'testQueue': 1"), shell.executeCommand("send-message --queue testQueue --body testMessage1").getResult)
+    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
 
     List(
       "list-queues --pending =1",

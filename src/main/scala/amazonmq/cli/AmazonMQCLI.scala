@@ -37,6 +37,9 @@ class AmazonMQCLI extends CommandMarker {
 object AmazonMQCLI extends App {
 
   lazy val ReleaseNotes = Map(
+    "v0.1.1" → List(
+      "Updated dependencies for ActiveMQ 5.15.11 compatibility"
+    ),
     "v0.1.0" → List(
       "Updated shell command 'browse-messages': new option --regex",
       "Updated shell command 'copy-messages': new option --regex",
