@@ -20,7 +20,7 @@ import java.util.List
 
 import amazonmq.cli.AmazonMQCLI
 import amazonmq.cli.domain.Broker
-import org.springframework.shell.core.{Completion, Converter, MethodTarget}
+import org.springframework.shell.core.{ Completion, Converter, MethodTarget }
 import org.springframework.stereotype.Component
 
 import scala.collection.JavaConversions._

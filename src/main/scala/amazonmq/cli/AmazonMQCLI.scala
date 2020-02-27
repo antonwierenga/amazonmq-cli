@@ -20,7 +20,7 @@ import java.io.File
 import java.nio.file.Paths
 
 import amazonmq.cli.domain.Broker
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{ Config, ConfigFactory }
 import org.springframework.shell.Bootstrap
 import org.springframework.shell.core.CommandMarker
 import org.springframework.shell.core.annotation.CliCommand
@@ -85,6 +85,10 @@ object AmazonMQCLI extends App {
   lazy val Config: Config = ConfigFactory.load
 
   var broker: Option[Broker] = None
+
+  // supress 'illegal reflective access' warnings
+  System.err.close()
+  System.setErr(System.out)
 
   Bootstrap.main(args)
 

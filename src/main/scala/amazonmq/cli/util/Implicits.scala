@@ -20,7 +20,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import com.typesafe.config.Config
-import javax.jms.{Message, TextMessage}
+import javax.jms.{ Message, TextMessage }
 
 import scala.collection.JavaConversions._
 

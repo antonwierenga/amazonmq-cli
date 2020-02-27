@@ -16,7 +16,7 @@
 
 package amazonmq.cli.command
 
-import java.io.{BufferedWriter, File, FileWriter}
+import java.io.{ BufferedWriter, File, FileWriter }
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -25,8 +25,8 @@ import amazonmq.cli.AmazonMQCLI._
 import amazonmq.cli.util.Console._
 import amazonmq.cli.util.Implicits._
 import com.gargoylesoftware.htmlunit.WebClient
-import javax.jms.{Message, Session, TextMessage}
-import org.springframework.shell.core.annotation.{CliAvailabilityIndicator, CliCommand, CliOption}
+import javax.jms.{ Message, Session, TextMessage }
+import org.springframework.shell.core.annotation.{ CliAvailabilityIndicator, CliCommand, CliOption }
 import org.springframework.stereotype.Component
 
 import scala.xml.XML

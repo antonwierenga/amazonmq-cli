@@ -22,9 +22,9 @@ import amazonmq.cli.AmazonMQCLI
 import amazonmq.cli.domain.Broker
 import amazonmq.cli.util.Console._
 import com.gargoylesoftware.htmlunit.WebClient
-import com.gargoylesoftware.htmlunit.html.{HtmlPage, HtmlTableRow}
+import com.gargoylesoftware.htmlunit.html.{ HtmlPage, HtmlTableRow }
 import javax.jms.Session
-import org.springframework.shell.core.annotation.{CliAvailabilityIndicator, CliCommand, CliOption}
+import org.springframework.shell.core.annotation.{ CliAvailabilityIndicator, CliCommand, CliOption }
 import org.springframework.stereotype.Component
 
 import scala.tools.jline.console.ConsoleReader

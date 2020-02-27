@@ -17,18 +17,18 @@
 package amazonmq.cli.command
 
 import java.text.SimpleDateFormat
-import java.util.{Date, UUID}
+import java.util.{ Date, UUID }
 
 import amazonmq.cli.AmazonMQCLI
-import amazonmq.cli.util.Console.{info, prompt, warn}
+import amazonmq.cli.util.Console.{ info, prompt, warn }
 import amazonmq.cli.util.Implicits._
 import amazonmq.cli.util.PrintStackTraceExecutionProcessor
-import com.gargoylesoftware.htmlunit.{BrowserVersion, WebClient}
+import com.gargoylesoftware.htmlunit.{ BrowserVersion, WebClient }
 import com.gargoylesoftware.htmlunit.xml.XmlPage
-import javax.jms.{Connection, Message, Session}
+import javax.jms.{ Connection, Message, Session }
 import javax.xml.bind.DatatypeConverter._
 import org.apache.activemq.ActiveMQConnectionFactory
-import org.springframework.shell.support.table.{Table, TableHeader}
+import org.springframework.shell.support.table.{ Table, TableHeader }
 
 import scala.collection.JavaConversions._
 import scala.collection.mutable.ListBuffer

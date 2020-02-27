@@ -19,7 +19,7 @@ package amazonmq.cli.command
 import amazonmq.cli.AmazonMQCLI
 import amazonmq.cli.util.Console._
 import amazonmq.cli.util.Implicits._
-import com.gargoylesoftware.htmlunit.html.{DomElement, HtmlAnchor, HtmlInput, HtmlPage, HtmlSubmitInput}
+import com.gargoylesoftware.htmlunit.html.{ DomElement, HtmlAnchor, HtmlInput, HtmlPage, HtmlSubmitInput }
 import org.springframework.shell.core.annotation.CliAvailabilityIndicator
 import org.springframework.shell.core.annotation.CliCommand
 import org.springframework.shell.core.annotation.CliOption

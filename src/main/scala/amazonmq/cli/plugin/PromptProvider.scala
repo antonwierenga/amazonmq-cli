@@ -20,7 +20,7 @@ import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.shell.plugin.support.DefaultPromptProvider
 import org.springframework.stereotype.Component
-import amazonmq.cli.{AmazonMQCLI, util}
+import amazonmq.cli.{ AmazonMQCLI, util }
 import amazonmq.cli.util.Implicits._
 import amazonmq.cli.util.Console
 
