@@ -1,5 +1,5 @@
 # amazonmq-cli
-Command-line tool (Windows/macOS/Linux) to interact with the Amazon MQ message broker. It can also interact with a regular ActiveMQ broker (JMX not required) as long as amazonmq-cli has access to the [ActiveMQ Web Console](https://activemq.apache.org/web-console) of the broker.
+Command-line tool (Windows/macOS/Linux) to interact with the Amazon MQ message broker. Interaction with a regular ActiveMQ broker (JMX not required) is also supported. The [ActiveMQ Web Console](https://activemq.apache.org/web-console) must be available for amazonmq-cli to function properly.
 
 ![screenshot](/amazonmq_screenshot.jpg)
 
