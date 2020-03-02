@@ -114,7 +114,7 @@ class QueueCommands extends Commands {
         } catch {
           case arrayIndexOutOfBoundsException: ArrayIndexOutOfBoundsException ⇒ // do nothing
         }
-        Thread.sleep(AmazonMQCLI.Config.getInt("command.remove-all-queues.web-console-pause"))
+        Thread.sleep(AmazonMQCLI.Config.getInt("web-console.pause"))
       })
   }
 
@@ -138,7 +138,7 @@ class QueueCommands extends Commands {
         } catch {
           case arrayIndexOutOfBoundsException: ArrayIndexOutOfBoundsException ⇒ // do nothing
         }
-        Thread.sleep(AmazonMQCLI.Config.getInt("command.purge-all-queues.web-console-pause"))
+        Thread.sleep(AmazonMQCLI.Config.getInt("web-console.pause"))
       })
   }
 

@@ -37,6 +37,16 @@ class AmazonMQCLI extends CommandMarker {
 object AmazonMQCLI extends App {
 
   lazy val ReleaseNotes = Map(
+    "v0.2.0" → List(
+      "Included JAXB dependency for Java 11 compatibility",
+      "Updated shell command 'copy-messages': implemented batch processing to support large queues",
+      "Updated shell command 'export-messages': implemented batch processing to support large queues",
+      "Updated shell command 'move-messages': implemented batch processing to support large queues",
+      "Removed option --regex from shell command 'copy-messages'",
+      "Removed option --regex from shell command 'export-messages'",
+      "Removed option --regex from shell command 'move-messages'",
+      "Removed shell command 'list-messages'"
+    ),
     "v0.1.1" → List(
       "Updated dependencies for ActiveMQ 5.15.11 compatibility"
     ),
@@ -85,6 +95,10 @@ object AmazonMQCLI extends App {
   lazy val Config: Config = ConfigFactory.load
 
   var broker: Option[Broker] = None
+
+  // supress 'illegal reflective access' warning in org.apache.activemq.util.IntrospectionSupport
+  System.err.close()
+  System.setErr(System.out)
 
   Bootstrap.main(args)
 

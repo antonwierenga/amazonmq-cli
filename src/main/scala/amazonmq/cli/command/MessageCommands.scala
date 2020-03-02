@@ -43,31 +43,28 @@ class MessageCommands extends Commands {
   val JMSReplyTo = ("JMSReplyTo", "reply-to")
   val TimeToLive = ("timeToLive", "time-to-live")
 
-  @CliAvailabilityIndicator(Array("move-messages", "copy-messages", "list-messages", "send-message", "export-messages"))
+  @CliAvailabilityIndicator(Array("move-messages", "copy-messages", "browse-messages", "send-message", "export-messages"))
   def isBrokerAvailable: Boolean = AmazonMQCLI.broker.isDefined
 
   @CliCommand(value = Array("move-messages"), help = "Moves messages between queues")
   def moveMessages(
     @CliOption(key = Array("from"), mandatory = true, help = "The source queue") from: String,
     @CliOption(key = Array("to"), mandatory = true, help = "The target queue") to: String,
-    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String,
-    @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String
+    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String
   ): String = {
-    withEveryMessage(from, Option(selector), Option(regex), "Messages moved", to, None,
-      AmazonMQCLI.Config.getLong("command.move-messages.receive-timeout"),
-      (message: Message) ⇒ {})
+    withWebClient((webClient: WebClient) ⇒ {
+      validateQueueExists(webClient, from)
+      info(s"Messages moved: ${moveMessages(from, to, Option(selector))}")
+    })
   }
 
   @CliCommand(value = Array("copy-messages"), help = "Copies messages between queues")
   def copyMessages(
     @CliOption(key = Array("from"), mandatory = true, help = "The source queue") from: String,
     @CliOption(key = Array("to"), mandatory = true, help = "The target queue") to: String,
-    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String,
-    @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String
+    @CliOption(key = Array("selector"), mandatory = false, help = "The message selector") selector: String
   ): String = {
-    withEveryMessage(from, Option(selector), Option(regex), "Messages copied", to, Some(from),
-      AmazonMQCLI.Config.getLong("command.copy-messages.receive-timeout"),
-      (message: Message) ⇒ {})
+    withEveryMessage(from, Option(selector), List(from, to), "Messages copied", (message: Message) ⇒ {})
   }
 
   @CliCommand(value = Array("send-message"), help = "Sends a message to a queue or topic")
@@ -85,6 +82,7 @@ class MessageCommands extends Commands {
   ): String = {
     val start = System.currentTimeMillis
     val pFile = if (file) file.replaceFirst("^~", System.getProperty("user.home")) else file
+    var totalSent = 0
 
     withSession((session: Session) ⇒ {
       if (!file && !body) throw new IllegalArgumentException("Either --body or --file must be specified, but not both")
@@ -111,7 +109,6 @@ class MessageCommands extends Commands {
       }
 
       try {
-        var totalSent = 0
         if (body) {
           val message = session.createTextMessage(body)
           if (replyTo) {
@@ -160,20 +157,19 @@ class MessageCommands extends Commands {
             })
           }
         }
-        val duration = System.currentTimeMillis - start
-        formatDuration(duration)
-        info(s"Messages sent to ${if (queue) s"queue '$queue'" else s"topic '$topic'"}: $totalSent${if (duration > 1000) s" (${formatDuration(duration)})" else ""}") //scalastyle:ignore
       } finally {
         producer.close()
       }
     })
+    val duration = System.currentTimeMillis - start
+    formatDuration(duration)
+    info(s"Messages sent to ${if (queue) s"queue '$queue'" else s"topic '$topic'"}: $totalSent${if (duration > 1000) s" (${formatDuration(duration)})" else ""}") //scalastyle:ignore
   }
 
   @CliCommand(value = Array("export-messages"), help = "Exports messages to file")
   def exportMessages(
     @CliOption(key = Array("queue"), mandatory = true, help = "The name of the queue") queue: String,
     @CliOption(key = Array("selector"), mandatory = false, help = "the jms message selector") selector: String,
-    @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String,
     @CliOption(key = Array("file"), mandatory = false, help = "The file that is used to save the messages in") file: String
   ): String = {
     val pFile = if (file) file.replaceFirst("^~", System.getProperty("user.home")) else file
@@ -189,31 +185,17 @@ class MessageCommands extends Commands {
       val bufferedWriter = new BufferedWriter(new FileWriter(outputFile))
       try {
         bufferedWriter.write("<jms-messages>\n")
-        val result = withEveryMessage(queue, Option(selector), Option(regex), s"Messages exported to ${outputFile.getCanonicalPath()}", queue, None,
-          AmazonMQCLI.Config.getLong("command.export-messages.receive-timeout"),
+        val resultMessge = withEveryMessage(queue, Option(selector), List(queue), s"Messages exported to ${outputFile.getCanonicalPath()}",
           (message: Message) ⇒ {
-            bufferedWriter.write(s"${message.toXML(AmazonMQCLI.Config.getOptionalString("command.list-messages.timestamp-format"))}\n"
+            bufferedWriter.write(s"${message.toXML(AmazonMQCLI.Config.getOptionalString("command.export-messages.timestamp-format"))}\n"
               .replaceAll("(?m)^", "  "))
           })
         bufferedWriter.write("</jms-messages>\n")
-        result
+        resultMessge
       } finally {
         bufferedWriter.close
       }
     }
-  }
-
-  @CliCommand(value = Array("list-messages"), help = "Displays messages")
-  def listMessages(
-    @CliOption(key = Array("queue"), mandatory = true, help = "The name of the queue") queue: String,
-    @CliOption(key = Array("selector"), mandatory = false, help = "the JMS message selector") selector: String,
-    @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String
-  ): String = {
-    withEveryMessage(queue, Option(selector), Option(regex), "Messages listed", queue, None,
-      AmazonMQCLI.Config.getLong("command.list-messages.receive-timeout"),
-      (message: Message) ⇒ {
-        println(info(s"${message.toXML(AmazonMQCLI.Config.getOptionalString("command.list-messages.timestamp-format"))}")) //scalastyle:ignore
-      })
   }
 
   @CliCommand(value = Array("browse-messages"), help = "Displays messages")
@@ -221,19 +203,21 @@ class MessageCommands extends Commands {
     @CliOption(key = Array("queue"), mandatory = true, help = "The name of the queue") queue: String,
     @CliOption(key = Array("selector"), mandatory = false, help = "the JMS message selector") selector: String,
     @CliOption(key = Array("regex"), mandatory = false, help = "The regular expression the JMS text message must match") regex: String
-  ): String = withSession((session: Session) ⇒ {
+  ): String = {
+    var numberOfMessages = 0
     withWebClient((webClient: WebClient) ⇒ {
       validateQueueExists(webClient, queue)
-      var numberOfMessages = 0
-      val enumeration = session.createBrowser(session.createQueue(queue), selector).getEnumeration
-      while (enumeration.hasMoreElements) {
-        val message = enumeration.nextElement.asInstanceOf[TextMessage]
-        if (message.textMatches(regex)) {
-          println(info(s"${message.toXML(AmazonMQCLI.Config.getOptionalString("command.list-messages.timestamp-format"))}")) //scalastyle:ignore
-          numberOfMessages = numberOfMessages + 1
+      withSession((session: Session) ⇒ {
+        val enumeration = session.createBrowser(session.createQueue(queue), selector).getEnumeration
+        while (enumeration.hasMoreElements) {
+          val message = enumeration.nextElement.asInstanceOf[TextMessage]
+          if (message.textMatches(regex)) {
+            println(info(s"${message.toXML(AmazonMQCLI.Config.getOptionalString("command.browse-messages.timestamp-format"))}")) //scalastyle:ignore
+            numberOfMessages = numberOfMessages + 1
+          }
         }
-      }
-      info(s"\nMessages browsed: $numberOfMessages (not all messages may be returned due to limitations of broker configuration and system resources)") //scalastyle:ignore
+      })
+      info(s"\nMessages browsed: $numberOfMessages") //scalastyle:ignore
     })
-  })
+  }
 }

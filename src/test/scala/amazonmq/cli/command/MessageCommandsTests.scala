@@ -44,11 +44,11 @@ class MessageCommandsTests {
   @Test
   def testSendAndExportInlineMessage = {
     assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue testQueue").getResult)
+    assertEquals(info("\nMessages browsed: 1"), shell.executeCommand("browse-messages --queue testQueue").getResult)
 
     val messageFilePath = createTempFilePath("MessageCommandsTests_testSendAndExportMessage")
     try {
-      assertEquals(info(s"\nMessages exported to ${new File(messageFilePath).getCanonicalPath()}: 1"), shell.executeCommand(s"export-messages --queue testQueue --file $messageFilePath").getResult)
+      assertEquals(info(s"Messages exported to ${new File(messageFilePath).getCanonicalPath()}: 1"), shell.executeCommand(s"export-messages --queue testQueue --file $messageFilePath").getResult)
       val xml = XML.loadFile(messageFilePath)
       assertFalse((xml \ "jms-message" \ "header" \ "message-id").isEmpty)
       assertTrue((xml \ "jms-message" \ "header" \ "correlation-id").isEmpty)
@@ -67,11 +67,11 @@ class MessageCommandsTests {
   @Test
   def testSendAndExportInlineMessageAllHeadersProvided = {
     assertTrue(shell.executeCommand("send-message --queue testQueue --reply-to replyQueue --correlation-id testCorrelationId --delivery-mode NON_PERSISTENT --time-to-live 20000 --priority 1 --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue testQueue").getResult)
+    assertEquals(info("\nMessages browsed: 1"), shell.executeCommand("browse-messages --queue testQueue").getResult)
 
     val messageFilePath = createTempFilePath("MessageCommandsTests_testSendAndExportMessage")
     try {
-      assertEquals(info(s"\nMessages exported to ${new File(messageFilePath).getCanonicalPath()}: 1"), shell.executeCommand(s"export-messages --queue testQueue --file $messageFilePath").getResult)
+      assertEquals(info(s"Messages exported to ${new File(messageFilePath).getCanonicalPath()}: 1"), shell.executeCommand(s"export-messages --queue testQueue --file $messageFilePath").getResult)
       val xml = XML.loadFile(messageFilePath)
       assertFalse((xml \ "jms-message" \ "header" \ "message-id").isEmpty)
       assertEquals("testCorrelationId", (xml \ "jms-message" \ "header" \ "correlation-id") text)
@@ -89,12 +89,12 @@ class MessageCommandsTests {
   @Test
   def testSendInlineMessageTimes2 = {
     assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage --times 2").getResult.toString.contains("Messages sent to queue 'testQueue': 2"))
-    assertEquals(info("\nMessages listed: 2"), shell.executeCommand("list-messages --queue testQueue").getResult)
+    assertEquals(info("\nMessages browsed: 2"), shell.executeCommand("browse-messages --queue testQueue").getResult)
   }
 
   @Test
-  def testListMessagesNonExistingQueue = {
-    assertEquals(warn("Queue 'testQueue' does not exist"), shell.executeCommand("list-messages --queue testQueue").getResult)
+  def testBrowseMessagesNonExistingQueue = {
+    assertEquals(warn("Queue 'testQueue' does not exist"), shell.executeCommand("browse-messages --queue testQueue").getResult)
   }
 
   @Test
@@ -102,14 +102,14 @@ class MessageCommandsTests {
     assertEquals(info("Topic 'VirtualTopic.testTopic' added"), shell.executeCommand("add-topic --name VirtualTopic.testTopic").getResult)
     assertEquals(info("Queue 'Consumer.testQueue.VirtualTopic.testTopic' added"), shell.executeCommand("add-queue --name Consumer.testQueue.VirtualTopic.testTopic").getResult)
     assertTrue(shell.executeCommand("send-message --topic VirtualTopic.testTopic --body testMessage").getResult.toString.contains("Messages sent to topic 'VirtualTopic.testTopic': 1"))
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue Consumer.testQueue.VirtualTopic.testTopic").getResult)
+    assertEquals(info("\nMessages browsed: 1"), shell.executeCommand("browse-messages --queue Consumer.testQueue.VirtualTopic.testTopic").getResult)
   }
 
   @Test
   def testAvailabilityIndicators: Unit = {
     assertTrue(shell.executeCommand("disconnect").isSuccess)
     try {
-      List("move-messages", "copy-messages", "list-messages", "send-message", "export-messages").map(command ⇒ {
+      List("move-messages", "copy-messages", "browse-messages", "send-message", "export-messages").map(command ⇒ {
         assertCommandFailed(shell.executeCommand(command))
       })
     } finally {
@@ -120,52 +120,14 @@ class MessageCommandsTests {
   @Test
   def testBrowseMessages = {
     assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertEquals(info("\nMessages browsed: 1 (not all messages may be returned due to limitations of broker configuration and system resources)"), shell.executeCommand("browse-messages --queue testQueue").getResult)
-  }
-
-  @Test
-  def testListMessagesRegex = {
-    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue testQueue --regex testMessage2").getResult)
-    assertEquals(info("\nMessages listed: 2"), shell.executeCommand("list-messages --queue testQueue").getResult)
-  }
-
-  @Test
-  def testMoveMessagesRegex = {
-    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
-    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
-    assertEquals(info("\nMessages moved: 1"), shell.executeCommand("move-messages --from fromQueue --regex testMessage1 --to toQueue").getResult)
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue fromQueue --regex testMessage2").getResult)
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue toQueue --regex testMessage1").getResult)
-  }
-
-  @Test
-  def testCopyMessagesRegex = {
-    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
-    assertTrue(shell.executeCommand("send-message --queue fromQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'fromQueue': 1"))
-    assertEquals(info("\nMessages copied: 1"), shell.executeCommand("copy-messages --from fromQueue --regex testMessage1 --to toQueue").getResult)
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue fromQueue --regex testMessage1").getResult)
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue fromQueue --regex testMessage2").getResult)
-    assertEquals(info("\nMessages listed: 1"), shell.executeCommand("list-messages --queue toQueue --regex testMessage1").getResult)
-  }
-
-  @Test
-  def testExportMessagesRegex = {
-    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-
-    val messageFilePath = createTempFilePath("MessageCommandsTests_testSendAndExportMessage")
-    try {
-      assertEquals(info(s"\nMessages exported to ${new File(messageFilePath).getCanonicalPath()}: 1"), shell.executeCommand(s"export-messages --queue testQueue --regex testMessage1 --file $messageFilePath").getResult)
-    } finally new File(messageFilePath).delete
+    assertEquals(info("\nMessages browsed: 1"), shell.executeCommand("browse-messages --queue testQueue").getResult)
   }
 
   @Test
   def testBrowseMessagesRegex = {
     assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage1").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
     assertTrue(shell.executeCommand("send-message --queue testQueue --body testMessage2").getResult.toString.contains("Messages sent to queue 'testQueue': 1"))
-    assertEquals(info("\nMessages browsed: 1 (not all messages may be returned due to limitations of broker configuration and system resources)"), shell.executeCommand("browse-messages --queue testQueue --regex testMessage1").getResult)
+    assertEquals(info("\nMessages browsed: 1"), shell.executeCommand("browse-messages --queue testQueue --regex testMessage1").getResult)
   }
 }
 

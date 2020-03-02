@@ -23,6 +23,7 @@ import amazonmq.cli.AmazonMQCLI
 import amazonmq.cli.util.Console.{info, prompt, warn}
 import amazonmq.cli.util.Implicits._
 import amazonmq.cli.util.PrintStackTraceExecutionProcessor
+import com.gargoylesoftware.htmlunit.html.HtmlPage
 import com.gargoylesoftware.htmlunit.{BrowserVersion, WebClient}
 import com.gargoylesoftware.htmlunit.xml.XmlPage
 import javax.jms.{Connection, Message, Session}
@@ -104,14 +105,14 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
     }
   }
 
-  def withSession(callback: (Session) ⇒ String): String = {
+  def withSession(callback: (Session) ⇒ Unit): Unit = {
     var connection: Option[Connection] = None
     var session: Option[Session] = None
     try {
       connection = Some(new ActiveMQConnectionFactory(AmazonMQCLI.broker.get.username, AmazonMQCLI.broker.get.password,
         AmazonMQCLI.broker.get.amqurl).createConnection)
       connection.get.start
-      session = Some(connection.get.createSession(true, Session.SESSION_TRANSACTED))
+      session = Some(connection.get.createSession(true, Session.AUTO_ACKNOWLEDGE))
       callback(session.get)
     } catch {
       case illegalArgumentException: IllegalArgumentException ⇒ {
@@ -143,42 +144,61 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
     }
   }
 
-  def withEveryMessage(queue: String, selector: Option[String], regex: Option[String], responseMessage: String, firstDestinationQueue: String,
-    secondDestinationQueue: Option[String], receiveTimeout: Long, callback: (Message) ⇒ Unit): String = {
+  def moveMessages(from: String, to: String, selector: Option[String]): Int = {
+    var messagesMoved = 0
+    var timeoutReached = false
+    while (!timeoutReached) {
+      withSession((session: Session) ⇒ {
+        val fromConsumer = session.createConsumer(session.createQueue(from), selector.getOrElse(null)) //scalastyle:ignore
+        val toProducer = session.createProducer(session.createQueue(to))
+        do {
+          val message = fromConsumer.receive(AmazonMQCLI.Config.getLong("messages.receive.timeout"))
+          if (Option(message).isDefined) {
+            messagesMoved = messagesMoved + 1
+            toProducer.send(message)
+          } else {
+            timeoutReached = true
+          }
+        } while (!timeoutReached && messagesMoved % AmazonMQCLI.Config.getInt("messages.receive.batch-size") != 0)
+      })
+    }
+    messagesMoved
+  }
+
+  def withEveryMessage(queue: String, selector: Option[String], destinationQueues: Seq[String], resultMessage: String, callback: (Message) ⇒ Unit): String = {
     withWebClient((webClient: WebClient) ⇒ {
       validateQueueExists(webClient, queue)
-      withSession((session: Session) ⇒ {
-        var callbacks = 0
-        val consumer = session.createConsumer(session.createQueue(queue), selector.getOrElse(null)) //scalastyle:ignore
-        val queueDestinationProducer = session.createProducer(session.createQueue(queue))
-        val firstDestinationProducer = session.createProducer(session.createQueue(firstDestinationQueue))
-        val secondDestinationProducer = if (secondDestinationQueue.isDefined) {
-          Some(session.createProducer(session.createQueue(secondDestinationQueue.get)))
-        } else {
-          None
-        }
-        var message = consumer.receive(receiveTimeout)
-        while (Option(message).isDefined) {
-          if (message.textMatches(regex.getOrElse(null))) { //scalastyle:ignore
-            firstDestinationProducer.send(message)
-            if (secondDestinationProducer.isDefined) {
-              secondDestinationProducer.get.send(message)
-            }
+      val tempQueue = s"amazonmq-cli.$queue.temp.${new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())}.${UUID.randomUUID().toString()}"
+      val totalMessages = moveMessages(queue, tempQueue, selector)
+      var messagesProcessed = 0
+      while (messagesProcessed < totalMessages) {
+        withSession(callback = (session: Session) ⇒ {
+          val consumer = session.createConsumer(session.createQueue(tempQueue))
+          val destinationProducers = destinationQueues.map(destinationQueue ⇒ session.createProducer(session.createQueue(destinationQueue)))
+          do {
+            val message = consumer.receive(AmazonMQCLI.Config.getLong("messages.receive.timeout"))
+            messagesProcessed = messagesProcessed + 1
+            destinationProducers.map(producer ⇒ producer.send(message))
             callback(message)
-            callbacks = callbacks + 1
-          } else {
-            queueDestinationProducer.send(message) // put back on original queue
-          }
-          message = consumer.receive(receiveTimeout)
-
-        }
-        info(s"\n$responseMessage: $callbacks")
-      })
+          } while (messagesProcessed < totalMessages && messagesProcessed % AmazonMQCLI.Config.getInt("messages.receive.batch-size") != 0)
+        })
+      }
+      if (messagesProcessed > 0) {
+        removeQueue(webClient, tempQueue)
+      }
+      info(s"$resultMessage: $totalMessages")
     })
   }
 
-  def getNewMirrorQueue(queue: String): String = {
-    s"activemq-cli.$queue.mirror.${new SimpleDateFormat("ddMMyyyy_HHmmss").format(new Date())}.${UUID.randomUUID().toString()}"
+  def removeQueue(webClient: WebClient, name: String): Unit = {
+    val page: HtmlPage = webClient.getPage(s"${AmazonMQCLI.broker.get.webConsole}/queues.jsp")
+    val anchor = page.getAnchors().find(a ⇒ a.getHrefAttribute.startsWith("deleteDestination.action") &&
+      a.getHrefAttribute.contains(s"JMSDestination=$name&JMSDestinationType=queue"))
+    try {
+      anchor.get.click()
+    } catch {
+      case arrayIndexOutOfBoundsException: ArrayIndexOutOfBoundsException ⇒ // do nothing
+    }
   }
 
   def applyFilterParameter(parameter: String, value: Long, parameterValue: Long): Boolean = {

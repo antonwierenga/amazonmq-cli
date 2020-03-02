@@ -57,6 +57,7 @@ Adds a topic.
 
 Example:`add-topic --name foo`
 
+<<<<<<< Updated upstream
 ### browse-messages
 Browse messages. The browse operation may not return all messages due to limitations of broker configuration and system resources.
 
@@ -71,6 +72,8 @@ Example 2:`browse-messages --queue foo --selector "JMSCorrelationID = '12345'"`
 
 Example 3:`browse-messages --queue foo --regex bar`
 
+=======
+>>>>>>> Stashed changes
 ### connect
 Connects amazonmq-cli to a broker.
 
@@ -112,6 +115,21 @@ Example:`export-messages --queue foo`
 Displays information (e.g. version, uptime, total number of queues/topics/messages) about the broker 
 
 Example:`info`
+
+### browse-messages
+Browses messages. This command may not return all messages due to limitations of broker configuration and system resources.
+Use export-messages to retrieve all messages of a queue. 
+
+##### Parameters:
+  - queue
+  - selector (lists messages that match the (JMS) selector)
+  - regex (lists messages whose body match the regex)
+ 
+Example 1:`browse-messages --queue foo`
+
+Example 2:`browse-messages --queue foo --selector "JMSCorrelationID = '12345'"`
+
+Example 3:`browse-messages --queue foo --regex bar`
 
 ### list-queues
 Lists queues.

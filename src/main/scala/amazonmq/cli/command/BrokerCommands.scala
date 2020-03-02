@@ -67,7 +67,7 @@ class BrokerCommands extends Commands {
         AmazonMQCLI.Config.getString(s"broker.$brokerAlias.amqurl"), username, password))
 
       setSslProperties(brokerAlias)
-      withSession((session: Session) ⇒ { "" })
+      withSession((session: Session) ⇒ {})
       info(s"Connected to broker '${AmazonMQCLI.broker.get.alias}'")
     } catch {
       case iae: IllegalArgumentException ⇒ {

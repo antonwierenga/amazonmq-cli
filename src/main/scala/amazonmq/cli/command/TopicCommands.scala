@@ -96,7 +96,7 @@ class TopicCommands extends Commands {
             case arrayIndexOutOfBoundsException: ArrayIndexOutOfBoundsException ⇒ // do nothing
           }
         }
-        Thread.sleep(AmazonMQCLI.Config.getInt("command.remove-all-topics.web-console-pause"))
+        Thread.sleep(AmazonMQCLI.Config.getInt("web-console.pause"))
       })
   }
 

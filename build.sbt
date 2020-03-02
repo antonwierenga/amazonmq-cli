@@ -2,7 +2,7 @@ organization := "com.antonwierenga"
 
 name := "amazonmq-cli"
 
-version := "0.1.1"
+version := "0.2.0"
 
 scalaVersion := "2.11.6"
 
@@ -16,6 +16,7 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.0.3"
 libraryDependencies += "junit" % "junit" % "4.8" % "test"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test->default"
 libraryDependencies += "net.sourceforge.htmlunit" % "htmlunit" % "2.36.0"
+libraryDependencies += "javax.xml.bind" % "jaxb-api" % "2.3.1"
 
 import scalariform.formatter.preferences._
 
