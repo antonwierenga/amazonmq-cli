@@ -58,7 +58,7 @@ Adds a topic.
 Example:`add-topic --name foo`
 
 ### browse-messages
-Browse messages. The browse operation may not return all messages due to limitations of broker configuration and system resources. In contrast to list-messages the browse-messages command also takes in-flight messages into consideration.
+Browse messages. The browse operation may not return all messages due to limitations of broker configuration and system resources.
 
 ##### Parameters:
   - queue
