@@ -86,7 +86,6 @@ Copies messages from a queue to another queue.
   - from
   - to 
   - selector (copy messages that match the (JMS) selector)
-  - regex (copy messages whose body match the regex)
   
 Example:`copy-messages --from foo --to bar`
 
@@ -104,7 +103,6 @@ Exports messages to file.
   - file
   - queue
   - selector (export messages that match the (JMS) selector)
-  - regex (export messages whose body match the regex)
  
 Example:`export-messages --queue foo`
 
@@ -114,22 +112,6 @@ Example:`export-messages --queue foo`
 Displays information (e.g. version, uptime, total number of queues/topics/messages) about the broker 
 
 Example:`info`
-
-### list-messages
-Lists messages.
-
-##### Parameters:
-  - queue
-  - selector (lists messages that match the (JMS) selector)
-  - regex (lists messages whose body match the regex)
- 
-Example 1:`list-messages --queue foo`
-
-Example 2:`list-messages --queue foo --selector "JMSCorrelationID = '12345'"`
-
-Example 3:`list-messages --queue foo --regex bar`
-
-*For this command amazonmq-cli consumes all messages from the --from queue and sends the messages back to the --from queue. In flight messages are not in scope of this command.*
 
 ### list-queues
 Lists queues.
@@ -164,7 +146,6 @@ Moves messages from a queue to another queue.
   - from
   - to 
   - selector (move messages that match the (JMS) selector)
-  - regex (move messages whose body match the regex)
   
 *For this command amazonmq-cli consumes all messages from the --from queue and sends the messages to the --to queue. In flight messages are not in scope of this command.*
 
