@@ -57,7 +57,6 @@ Adds a topic.
 
 Example:`add-topic --name foo`
 
-<<<<<<< Updated upstream
 ### browse-messages
 Browse messages. The browse operation may not return all messages due to limitations of broker configuration and system resources.
 
@@ -72,8 +71,6 @@ Example 2:`browse-messages --queue foo --selector "JMSCorrelationID = '12345'"`
 
 Example 3:`browse-messages --queue foo --regex bar`
 
-=======
->>>>>>> Stashed changes
 ### connect
 Connects amazonmq-cli to a broker.
 
