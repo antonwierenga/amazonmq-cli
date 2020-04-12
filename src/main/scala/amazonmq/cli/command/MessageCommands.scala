@@ -84,7 +84,8 @@ class MessageCommands extends Commands {
     val pFile = if (file) file.replaceFirst("^~", System.getProperty("user.home")) else file
     var totalSent = 0
 
-    withSession((session: Session) ⇒ {
+    withSession(callback = (session: Session) ⇒ {
+
       if (!file && !body) throw new IllegalArgumentException("Either --body or --file must be specified, but not both")
       if ((!queue && !topic) || (queue && topic)) throw new IllegalArgumentException("Either --queue or --topic must be specified, but not both")
       if (file) {
@@ -157,13 +158,13 @@ class MessageCommands extends Commands {
             })
           }
         }
+        val duration = System.currentTimeMillis - start
+        formatDuration(duration)
+        info(s"Messages sent to ${if (queue) s"queue '$queue'" else s"topic '$topic'"}: $totalSent${if (duration > 1000) s" (${formatDuration(duration)})" else ""}") //scalastyle:ignore
       } finally {
         producer.close()
       }
     })
-    val duration = System.currentTimeMillis - start
-    formatDuration(duration)
-    info(s"Messages sent to ${if (queue) s"queue '$queue'" else s"topic '$topic'"}: $totalSent${if (duration > 1000) s" (${formatDuration(duration)})" else ""}") //scalastyle:ignore
   }
 
   @CliCommand(value = Array("export-messages"), help = "Exports messages to file")
@@ -216,8 +217,8 @@ class MessageCommands extends Commands {
             numberOfMessages = numberOfMessages + 1
           }
         }
+        info(s"\nMessages browsed: $numberOfMessages") //scalastyle:ignore
       })
-      info(s"\nMessages browsed: $numberOfMessages") //scalastyle:ignore
     })
   }
 }

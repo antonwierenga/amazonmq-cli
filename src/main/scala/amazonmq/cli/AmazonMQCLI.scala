@@ -37,6 +37,10 @@ class AmazonMQCLI extends CommandMarker {
 object AmazonMQCLI extends App {
 
   lazy val ReleaseNotes = Map(
+    "v0.2.1" → List(
+      "Fixed 'send-message': errors now visible",
+      "Added web-console timeout configuration parameter"
+    ),
     "v0.2.0" → List(
       "Included JAXB dependency for Java 11 compatibility",
       "Updated shell command 'copy-messages': implemented batch processing to support large queues",
@@ -63,7 +67,6 @@ object AmazonMQCLI extends App {
       "New shell command 'connect'",
       "New shell command 'copy-messages '",
       "New shell command 'disconnect'",
-      "New shell command 'export-broker'",
       "New shell command 'export-messages'",
       "New shell command 'info'",
       "New shell command 'list-messages'",

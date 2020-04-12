@@ -105,7 +105,7 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
     }
   }
 
-  def withSession(callback: (Session) ⇒ Unit): Unit = {
+  def withSession(callback: (Session) ⇒ String): String = {
     var connection: Option[Connection] = None
     var session: Option[Session] = None
     try {
@@ -133,6 +133,8 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
     val webClient = new WebClient(BrowserVersion.BEST_SUPPORTED);
     webClient.addRequestHeader("Authorization", "Basic " + printBase64Binary(s"${AmazonMQCLI.broker.get.username}:${AmazonMQCLI.broker.get.password}".getBytes))
     webClient.getOptions.setJavaScriptEnabled(false)
+    val options = webClient.getOptions()
+    options.setTimeout(AmazonMQCLI.Config.getInt("web-console.timeout"))
     try {
       callback(webClient)
     } catch {
@@ -160,6 +162,7 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
             timeoutReached = true
           }
         } while (!timeoutReached && messagesMoved % AmazonMQCLI.Config.getInt("messages.receive.batch-size") != 0)
+        "."
       })
     }
     messagesMoved
@@ -181,6 +184,7 @@ abstract class Commands extends PrintStackTraceExecutionProcessor {
             destinationProducers.map(producer ⇒ producer.send(message))
             callback(message)
           } while (messagesProcessed < totalMessages && messagesProcessed % AmazonMQCLI.Config.getInt("messages.receive.batch-size") != 0)
+          "."
         })
       }
       if (messagesProcessed > 0) {

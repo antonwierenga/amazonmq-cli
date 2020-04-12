@@ -93,8 +93,18 @@ class MessageCommandsTests {
   }
 
   @Test
+  def testSendMessagesNoBody = {
+    assertEquals(warn("Either --body or --file must be specified, but not both"), shell.executeCommand("send-message --queue testQueue").getResult)
+  }
+
+  @Test
+  def testSendMessagesNoDestination = {
+    assertEquals(warn("Either --queue or --topic must be specified, but not both"), shell.executeCommand("send-message --body test").getResult)
+  }
+
+  @Test
   def testBrowseMessagesNonExistingQueue = {
-    assertEquals(warn("Queue 'testQueue' does not exist"), shell.executeCommand("browse-messages --queue testQueue").getResult)
+    assertEquals(warn("Queue 'testQueue' does not exist"), shell.executeCommand("browse-messages   --queue testQueue").getResult)
   }
 
   @Test
