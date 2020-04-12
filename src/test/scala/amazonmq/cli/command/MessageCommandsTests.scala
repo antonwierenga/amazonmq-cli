@@ -104,7 +104,7 @@ class MessageCommandsTests {
 
   @Test
   def testBrowseMessagesNonExistingQueue = {
-    assertEquals(warn("Queue 'testQueue' does not exist"), shell.executeCommand("browse-messages   --queue testQueue").getResult)
+    assertEquals(warn("Queue 'testQueue' does not exist"), shell.executeCommand("browse-messages --queue testQueue").getResult)
   }
 
   @Test
