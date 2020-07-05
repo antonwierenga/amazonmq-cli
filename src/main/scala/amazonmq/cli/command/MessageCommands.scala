@@ -153,6 +153,7 @@ class MessageCommands extends Commands {
                 JMSTimeToLiveDefault
               }
 
+              (xmlMessage \ "properties" \ "property").foreach(property ⇒ message.setStringProperty((property \ "name").text, (property \ "value").text))
               producer.send(session.createQueue(queue), message, deliverMode, 3, timeToLive)
               totalSent += 1
             })

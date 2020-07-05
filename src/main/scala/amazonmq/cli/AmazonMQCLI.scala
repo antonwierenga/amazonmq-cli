@@ -37,6 +37,9 @@ class AmazonMQCLI extends CommandMarker {
 object AmazonMQCLI extends App {
 
   lazy val ReleaseNotes = Map(
+    "v0.2.2" → List(
+      "Fixed 'send-message --file' custom properties are now sent"
+    ),
     "v0.2.1" → List(
       "Fixed 'send-message': errors now visible",
       "Added web-console timeout configuration parameter"
