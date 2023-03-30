@@ -149,6 +149,7 @@ Lists topics.
   - filter (list topics with the specified filter in the name)
   - enqueued (remove topics for which the number of enqueued messages meets the enqueued filter)
   - dequeued (remove topics for which the number of dequeued messages meets the dequeued filter)   
+  - consumers (list topics for which the number of consumers meets the consumers filter)
 
 Example 1:`topics --filter foo`
 

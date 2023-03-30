@@ -75,12 +75,13 @@ class TopicCommands extends Commands {
   @CliCommand(value = Array("remove-all-topics"), help = "Removes all topics")
   def removeAllTopics(
     @CliOption(key = Array("force"), specifiedDefaultValue = "yes", mandatory = false, help = "No prompt") force: String,
-    @CliOption(key = Array("filter"), mandatory = false, help = "The query") filter: String,
+    @CliOption(key = Array("filter"), mandatory = false, help = "The topic") filter: String,
     @CliOption(key = Array("dry-run"), specifiedDefaultValue = "yes", mandatory = false, help = "Dry run") dryRun: String,
-    @CliOption(key = Array("enqueued"), mandatory = false, help = "Only queues that meet the enqueued filter are listed") enqueued: String,
-    @CliOption(key = Array("dequeued"), mandatory = false, help = "Only queues that meet the dequeued filter are listed") dequeued: String
+    @CliOption(key = Array("enqueued"), mandatory = false, help = "Only topics that meet the enqueued filter are listed") enqueued: String,
+    @CliOption(key = Array("dequeued"), mandatory = false, help = "Only topics that meet the dequeued filter are listed") dequeued: String,
+    @CliOption(key = Array("consumers"), mandatory = false, help = "Only topics that meet the consumers filter are listed") consumers: String
   ): String = {
-    withFilteredTopics("removed", force, filter, dryRun, enqueued, dequeued,
+    withFilteredTopics("removed", force, filter, dryRun, enqueued, dequeued, consumers,
       (webClient: WebClient, topic: String) ⇒ {
         val page: HtmlPage = webClient.getPage(s"${AmazonMQCLI.broker.get.webConsole}/topics.jsp")
 
@@ -102,13 +103,15 @@ class TopicCommands extends Commands {
 
   @CliCommand(value = Array("list-topics"), help = "Displays topics")
   def listTopics(
-    @CliOption(key = Array("filter"), mandatory = false, help = "The query") filter: String,
-    @CliOption(key = Array("enqueued"), mandatory = false, help = "Only queues that meet the enqueued filter are listed") enqueued: String,
-    @CliOption(key = Array("dequeued"), mandatory = false, help = "Only queues that meet the dequeued filter are listed") dequeued: String
+    @CliOption(key = Array("filter"), mandatory = false, help = "The topic") filter: String,
+    @CliOption(key = Array("enqueued"), mandatory = false, help = "Only topics that meet the enqueued filter are listed") enqueued: String,
+    @CliOption(key = Array("dequeued"), mandatory = false, help = "Only topics that meet the dequeued filter are listed") dequeued: String,
+    @CliOption(key = Array("consumers"), mandatory = false, help = "Only topics that meet the consumers filter are listed") consumers: String
   ): String = {
 
-    val headers = List("Topic Name", "Enqueued", "Dequeued")
+    val headers = List("Topic Name", "Consumers", "Enqueued", "Dequeued")
 
+    val consumersCount = parseFilterParameter(consumers, "consumers")
     val enqueuedCount = parseFilterParameter(enqueued, "enqueued")
     val dequeuedCount = parseFilterParameter(dequeued, "dequeued")
 
@@ -118,18 +121,21 @@ class TopicCommands extends Commands {
       val topics: List[Map[String, Any]] = (document \ "topic").map(topic ⇒
         Map(
           "name" → (topic \@ "name"),
+          "consumerCount" → (topic \ "stats" \@ "consumerCount").toLong,
           "enqueueCount" → (topic \ "stats" \@ "enqueueCount").toLong,
           "dequeueCount" → (topic \ "stats" \@ "dequeueCount").toLong
-        )).toList.filter(queue ⇒
+        )).toList.filter(topic ⇒
         if (filter) {
-          queue.get("name").toString.toLowerCase.contains(Option(filter).getOrElse("").toLowerCase)
+          topic.get("name").toString.toLowerCase.contains(Option(filter).getOrElse("").toLowerCase)
         } else {
           true
-        }).filter(queue ⇒ applyFilterParameter(enqueued, queue.get("enqueueCount").get.asInstanceOf[Long], enqueuedCount) &&
-        applyFilterParameter(dequeued, queue.get("dequeueCount").get.asInstanceOf[Long], dequeuedCount))
+        }).filter(topic ⇒ applyFilterParameter(consumers, topic.get("consumerCount").get.asInstanceOf[Long], consumersCount) &&
+        applyFilterParameter(enqueued, topic.get("enqueueCount").get.asInstanceOf[Long], enqueuedCount) &&
+        applyFilterParameter(dequeued, topic.get("dequeueCount").get.asInstanceOf[Long], dequeuedCount))
 
-      val rows = topics.map(map ⇒ Seq(map.get("name").get.toString.trim, map.get("enqueueCount").get, map.get("dequeueCount").get))
+      val rows = topics.map(map ⇒ Seq(map.get("name").get.toString.trim, map.get("consumerCount").get, map.get("enqueueCount").get, map.get("dequeueCount").get))
         .seq.sortBy(AmazonMQCLI.Config.getOptionalString(s"command.list-topics.order.field") match {
+          case Some("Consumers") ⇒ (row: Seq[Any]) ⇒ { "%015d".format(row(headers.indexOf("Consumers"))).asInstanceOf[String] }
           case Some("Enqueued") ⇒ (row: Seq[Any]) ⇒ { "%015d".format(row(headers.indexOf("Enqueued"))).asInstanceOf[String] }
           case Some("Dequeued") ⇒ (row: Seq[Any]) ⇒ { "%015d".format(row(headers.indexOf("Dequeued"))).asInstanceOf[String] }
           case _ ⇒ (row: Seq[Any]) ⇒ { row(0).asInstanceOf[String] }
@@ -144,7 +150,8 @@ class TopicCommands extends Commands {
   }
 
   def withFilteredTopics(action: String, force: String, filter: String, dryRun: Boolean, enqueued: String, dequeued: String,
-    callback: (WebClient, String) ⇒ Unit): String = {
+    consumers: String, callback: (WebClient, String) ⇒ Unit): String = {
+    val consumersCount = parseFilterParameter(consumers, "consumers")
     val enqueuedCount = parseFilterParameter(enqueued, "enqueued")
     val dequeuedCount = parseFilterParameter(dequeued, "dequeued")
 
@@ -154,6 +161,7 @@ class TopicCommands extends Commands {
       val topics: List[String] = (document \ "topic").map(topic ⇒
         Map(
           "name" → (topic \@ "name"),
+          "consumerCount" → (topic \ "stats" \@ "consumerCount").toLong,
           "enqueueCount" → (topic \ "stats" \@ "enqueueCount").toLong,
           "dequeueCount" → (topic \ "stats" \@ "dequeueCount").toLong
         )).toList.filter(topic ⇒
@@ -161,7 +169,8 @@ class TopicCommands extends Commands {
           topic.get("name").toString.toLowerCase.contains(Option(filter).getOrElse("").toLowerCase)
         } else {
           true
-        }).filter(topic ⇒ applyFilterParameter(enqueued, topic.get("enqueueCount").get.asInstanceOf[Long], enqueuedCount) &&
+        }).filter(topic ⇒ applyFilterParameter(consumers, topic.get("consumerCount").get.asInstanceOf[Long], consumersCount) &&
+        applyFilterParameter(enqueued, topic.get("enqueueCount").get.asInstanceOf[Long], enqueuedCount) &&
         applyFilterParameter(dequeued, topic.get("dequeueCount").get.asInstanceOf[Long], dequeuedCount)).map(topic ⇒ {
         val topicName = topic.get("name").get.toString.trim
         if (dryRun) {
